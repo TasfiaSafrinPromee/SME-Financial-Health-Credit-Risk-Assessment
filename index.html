@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SME Financial Health & Credit Risk Assessment</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <div class="brand">
+      <span class="brand-icon">📊</span>
+      <h1>FinAssess <span>SME</span></h1>
+    </div>
+    <div class="actions">
+      <button id="load-sample-btn" class="btn btn-secondary">⚡ Load Sample SME Data</button>
+      <button id="reset-btn" class="btn btn-outline">Reset</button>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    <!-- Left Column: Input Form -->
+    <section class="card input-panel">
+      <h2>Financial Statement Inputs</h2>
+      <p class="subtitle">Enter annual figures in your currency (USD, BDT, EUR, etc.)</p>
+
+      <form id="financial-form">
+        <!-- Liquidity -->
+        <fieldset>
+          <legend>Liquidity Metrics</legend>
+          <div class="form-group">
+            <label for="currentAssets">Current Assets ($)</label>
+            <input type="number" id="currentAssets" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="currentLiabilities">Current Liabilities ($)</label>
+            <input type="number" id="currentLiabilities" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="cashEquivalents">Cash &amp; Cash Equivalents ($)</label>
+            <input type="number" id="cashEquivalents" step="any" required />
+          </div>
+        </fieldset>
+
+        <!-- Profitability -->
+        <fieldset>
+          <legend>Profitability &amp; Operations</legend>
+          <div class="form-group">
+            <label for="revenue">Total Revenue ($)</label>
+            <input type="number" id="revenue" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="cogs">Cost of Goods Sold (COGS) ($)</label>
+            <input type="number" id="cogs" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="operatingExpenses">Operating Expenses (OPEX) ($)</label>
+            <input type="number" id="operatingExpenses" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="netIncome">Net Income ($)</label>
+            <input type="number" id="netIncome" step="any" required />
+          </div>
+        </fieldset>
+
+        <!-- Solvency / Balance Sheet -->
+        <fieldset>
+          <legend>Solvency &amp; Balance Sheet</legend>
+          <div class="form-group">
+            <label for="totalAssets">Total Assets ($)</label>
+            <input type="number" id="totalAssets" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="totalDebt">Total Debt (Short &amp; Long term) ($)</label>
+            <input type="number" id="totalDebt" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="totalEquity">Total Equity ($)</label>
+            <input type="number" id="totalEquity" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="interestExpense">Annual Interest Expense ($)</label>
+            <input type="number" id="interestExpense" step="any" required />
+          </div>
+        </fieldset>
+
+        <!-- Cash Flow -->
+        <fieldset>
+          <legend>Cash Flow Dynamics</legend>
+          <div class="form-group">
+            <label for="operatingCashFlow">Operating Cash Flow (OCF) ($)</label>
+            <input type="number" id="operatingCashFlow" step="any" required />
+          </div>
+          <div class="form-group">
+            <label for="capEx">Capital Expenditures (CapEx) ($)</label>
+            <input type="number" id="capEx" step="any" required />
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-block">Run Credit Assessment</button>
+      </form>
+    </section>
+
+    <!-- Right Column: Results & Dashboard -->
+    <section class="results-panel">
+      <!-- Credit Score Banner -->
+      <div class="card banner-card">
+        <div class="banner-content">
+          <div>
+            <h3>Credit Risk Rating (Altman Z'-Score)</h3>
+            <p class="score-display">Z-Score: <span id="z-score-val">--</span></p>
+          </div>
+          <div id="risk-badge" class="badge badge-neutral">Awaiting Data</div>
+        </div>
+        <div class="formula-caption">
+          Model: <code>Z' = 6.56(X1) + 3.26(X2) + 6.72(X3) + 1.05(X4)</code> (Private Non-Manufacturing SME Model)
+        </div>
+      </div>
+
+      <!-- KPI Scorecards Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <h4>Current Ratio</h4>
+          <p class="kpi-value" id="kpi-current-ratio">--</p>
+          <small class="benchmark">Benchmark: &ge; 1.50</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Quick Ratio</h4>
+          <p class="kpi-value" id="kpi-quick-ratio">--</p>
+          <small class="benchmark">Benchmark: &ge; 1.00</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Net Profit Margin</h4>
+          <p class="kpi-value" id="kpi-net-margin">--%</p>
+          <small class="benchmark">Benchmark: &ge; 10%</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Return on Assets (ROA)</h4>
+          <p class="kpi-value" id="kpi-roa">--%</p>
+          <small class="benchmark">Benchmark: &ge; 6%</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Debt-to-Equity</h4>
+          <p class="kpi-value" id="kpi-de-ratio">--</p>
+          <small class="benchmark">Benchmark: &le; 1.50</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Interest Coverage</h4>
+          <p class="kpi-value" id="kpi-icr">--x</p>
+          <small class="benchmark">Benchmark: &ge; 3.0x</small>
+        </div>
+        <div class="kpi-card">
+          <h4>OCF-to-Debt Ratio</h4>
+          <p class="kpi-value" id="kpi-ocf-debt">--</p>
+          <small class="benchmark">Benchmark: &ge; 0.20</small>
+        </div>
+        <div class="kpi-card">
+          <h4>Free Cash Flow (FCF)</h4>
+          <p class="kpi-value" id="kpi-fcf">--</p>
+          <small class="benchmark">Benchmark: Positive (&gt; 0)</small>
+        </div>
+      </div>
+
+      <!-- Chart Comparison -->
+      <div class="card chart-card">
+        <h3>Performance vs. Benchmark Standards</h3>
+        <div class="chart-wrapper">
+          <canvas id="benchmarkChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Advisory Box -->
+      <div class="card advisory-card">
+        <h3>Credit &amp; Risk Advisory Report</h3>
+        <ul id="advisory-list" class="advisory-list">
+          <li>Complete the form or load sample data to generate strategic financial recommendations.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
